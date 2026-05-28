@@ -1,0 +1,2258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>BiRAGAS · SaaS Stream Playbook</title>
+<meta name="description" content="BiRAGAS SaaS Stream — 13-sheet investor workbook · phone-optimized · drawer nav · scrollable data tables.">
+
+<style>
+  html, body, #root { height: 100%; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    background: #0A0A0A;
+    color: #F5F0E8;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overscroll-behavior-y: contain;
+  }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: #0A0A0A; }
+  ::-webkit-scrollbar-thumb { background: #222; border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: #333; }
+
+  /* Boot splash */
+  #boot {
+    position: fixed; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    background: #0A0A0A; color: #F5F0E8;
+    z-index: 0;
+  }
+  #boot .kicker { font-size: 10px; letter-spacing: 0.3em; color: #888; font-family: monospace; }
+  #boot .logo { font-size: 28px; font-weight: 800; letter-spacing: -1px; margin-top: 14px; text-align: center; max-width: 90vw; }
+  #boot .spin { margin-top: 24px; width: 22px; height: 22px; border: 2px solid #333; border-top-color: #3B82F6; border-radius: 50%; animation: spin 0.9s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Sidebar (desktop only) */
+  .sidebar-desk { width: 290px; flex: none; background: #111; border-right: 1px solid #1F1F1F; overflow-y: auto; padding: 14px 0; }
+  .sb-item { display: block; width: 100%; background: transparent; border: none; border-left: 3px solid transparent; padding: 12px 20px; text-align: left; cursor: pointer; font-family: inherit; transition: background 0.12s ease; }
+  .sb-item:hover { background: #161616; }
+
+  /* Hamburger button */
+  .hamburger { display: none; background: transparent; border: 1px solid #333; width: 42px; height: 42px; border-radius: 6px; cursor: pointer; align-items: center; justify-content: center; padding: 0; flex-shrink: 0; }
+  .hamburger:active { background: #1A1A1A; }
+
+  /* Drawer */
+  .drawer-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.65); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); z-index: 300; opacity: 0; pointer-events: none; transition: opacity 0.22s ease; }
+  .drawer-overlay.open { opacity: 1; pointer-events: auto; }
+  .drawer { position: fixed; top: 0; left: 0; bottom: 0; width: min(86vw, 360px); background: #111; z-index: 310; transform: translateX(-100%); transition: transform 0.28s cubic-bezier(0.4,0,0.2,1); display: flex; flex-direction: column; box-shadow: 0 0 60px rgba(0,0,0,0.75); }
+  .drawer.open { transform: translateX(0); }
+  .drawer-head { padding: 14px 18px; border-bottom: 1px solid #1F1F1F; display: flex; justify-content: space-between; align-items: center; background: #0F0F0F; padding-top: max(14px, env(safe-area-inset-top, 14px)); }
+  .drawer-list { flex: 1; overflow-y: auto; padding: 6px 0; padding-bottom: max(20px, env(safe-area-inset-bottom, 20px)); }
+  .drawer-item { display: block; width: 100%; background: transparent; border: none; border-left: 3px solid transparent; padding: 14px 18px; text-align: left; cursor: pointer; font-family: inherit; }
+  .drawer-item:active { background: #1A1A1A; }
+
+  /* Header */
+  .hd { padding: 14px 28px 12px; background: linear-gradient(135deg, #0A0A0A 0%, #0F1828 100%); border-bottom: 1px solid #1F1F1F; }
+  .hd-row { display: flex; align-items: center; gap: 14px; }
+  .hd-title h1 { margin: 0; font-size: 22px; font-weight: 700; color: #F5F0E8; letter-spacing: -0.4px; }
+  .hd-title .k { font-size: 10px; letter-spacing: 0.25em; color: #888; text-transform: uppercase; font-family: monospace; margin-bottom: 4px; }
+  .hd-title .t { font-size: 12px; color: #999; font-style: italic; margin-top: 3px; }
+  .hd-controls { margin-left: auto; }
+
+  /* Tabs (section section-counter chip) */
+  .chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 9px; background: #1A1A1A; border: 1px solid #2A2A2A; font-family: monospace; font-size: 10px; color: #C8C4BC; border-radius: 3px; letter-spacing: 0.06em; }
+
+  /* Main scroll */
+  .main { flex: 1; overflow-y: auto; padding: 30px 44px 140px; -webkit-overflow-scrolling: touch; }
+
+  /* Data table */
+  .tbl-wrap { margin: 22px 0; border: 1px solid #1F1F1F; background: #0F0F0F; overflow: hidden; }
+  .tbl-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .tbl { border-collapse: collapse; width: 100%; min-width: 100%; }
+  .tbl th { background: #161616; padding: 12px 14px; text-align: left; font-size: 10px; letter-spacing: 0.18em; color: #888; text-transform: uppercase; font-family: monospace; font-weight: 700; border-bottom: 2px solid var(--accent, #3B82F6); white-space: nowrap; }
+  .tbl td { padding: 12px 14px; font-size: 12.5px; color: #E8E4DC; border-bottom: 1px solid #1A1A1A; vertical-align: top; line-height: 1.45; }
+  .tbl td:first-child { color: var(--accent, #3B82F6); font-weight: 700; white-space: nowrap; }
+  .tbl tr:last-child td { border-bottom: none; }
+
+  /* Mobile breakpoint */
+  @media (max-width: 900px) {
+    .sidebar-desk { display: none !important; }
+    .hamburger { display: inline-flex !important; }
+    .hd { padding: 14px 16px 10px; padding-top: max(14px, env(safe-area-inset-top, 14px)); }
+    .hd-title h1 { font-size: 16px !important; }
+    .hd-title .t { display: none; }
+    .hd-title .k { font-size: 9px !important; }
+    .main { padding: 22px 16px 200px; }
+    .tbl th { padding: 10px 12px; font-size: 9.5px; }
+    .tbl td { padding: 10px 12px; font-size: 12px; }
+    .tbl td:first-child { font-size: 12px; }
+    h2.headline { font-size: 20px !important; }
+    .kpi-grid { grid-template-columns: repeat(2, 1fr) !important; }
+  }
+
+  /* Floating pill nav */
+  .pill-nav {
+    position: fixed;
+    left: 14px; right: 14px;
+    bottom: max(20px, calc(env(safe-area-inset-bottom, 0px) + 14px));
+    display: flex; gap: 10px;
+    z-index: 200;
+    pointer-events: none;
+  }
+  .pill-nav button {
+    pointer-events: auto;
+    flex: 1;
+    height: 56px;
+    border-radius: 28px;
+    border: 1px solid #2A2A2A;
+    background: rgba(15,15,15,0.96);
+    color: #F5F0E8;
+    font-family: monospace;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: 0 16px 44px rgba(0,0,0,0.6);
+    transition: transform 0.12s ease, background 0.12s ease;
+  }
+  .pill-nav button:active { transform: scale(0.97); }
+  .pill-nav button.next { background: var(--accent, #3B82F6); color: #0A0A0A; border-color: var(--accent, #3B82F6); }
+  .pill-nav button:disabled { opacity: 0.35; cursor: default; }
+
+  @media (min-width: 901px) {
+    .pill-nav { left: auto; right: 28px; width: 280px; }
+  }
+
+  /* KPI grid */
+  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 20px 0; }
+  .kpi { background: #0F0F0F; border: 1px solid #1F1F1F; border-top: 2px solid var(--accent, #3B82F6); padding: 14px; }
+  .kpi-k { font-size: 22px; font-weight: 700; color: #F5F0E8; letter-spacing: -0.5px; }
+  .kpi-v { font-size: 10px; color: #888; margin-top: 5px; font-family: monospace; text-transform: uppercase; letter-spacing: 0.06em; line-height: 1.4; }
+</style>
+</head>
+<body>
+
+<div id="boot">
+  <div class="kicker">SAAS · STREAM I · MMXXVI</div>
+  <div class="logo">BIRAGAS SAAS PLAYBOOK</div>
+  <div class="spin"></div>
+</div>
+
+<div id="root"></div>
+
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+<script type="text/babel" data-presets="react,env">
+const { useState, useEffect, useRef } = React;
+const DATA = window.__PLAYBOOK_DATA__;
+const sections = DATA.sections;
+
+function App() {
+  const [idx, setIdx] = useState(0);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const touchRef = useRef(null);
+  const mainRef = useRef(null);
+
+  const cur = sections[idx];
+  const accent = cur.color;
+
+  useEffect(() => { document.body.style.overflow = drawerOpen ? "hidden" : ""; return () => { document.body.style.overflow = ""; }; }, [drawerOpen]);
+  useEffect(() => { const b = document.getElementById("boot"); if (b) b.style.display = "none"; }, []);
+  useEffect(() => { if (mainRef.current) mainRef.current.scrollTop = 0; }, [idx]);
+
+  // Keyboard
+  useEffect(() => {
+    const h = (e) => {
+      if (e.target.tagName === "INPUT" || e.target.tagName === "SELECT") return;
+      if (e.key === "ArrowRight" || e.key === " ") { e.preventDefault(); setIdx(i => Math.min(sections.length - 1, i + 1)); }
+      else if (e.key === "ArrowLeft") { e.preventDefault(); setIdx(i => Math.max(0, i - 1)); }
+      else if (e.key.toLowerCase() === "m") setDrawerOpen(v => !v);
+      else if (e.key === "Escape") setDrawerOpen(false);
+    };
+    window.addEventListener("keydown", h);
+    return () => window.removeEventListener("keydown", h);
+  }, []);
+
+  // Touch swipe
+  const onTouchStart = (e) => { touchRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY, t: Date.now() }; };
+  const onTouchEnd = (e) => {
+    const s = touchRef.current; if (!s) return;
+    const dx = e.changedTouches[0].clientX - s.x;
+    const dy = e.changedTouches[0].clientY - s.y;
+    const dt = Date.now() - s.t;
+    touchRef.current = null;
+    if (Math.abs(dx) > 55 && Math.abs(dx) > Math.abs(dy) * 1.4 && dt < 700) {
+      if (dx < 0) setIdx(i => Math.min(sections.length - 1, i + 1));
+      else setIdx(i => Math.max(0, i - 1));
+    }
+  };
+
+  return (
+    <div style={{ "--accent": accent, minHeight: "100vh", display: "flex", flexDirection: "column", background: "#0A0A0A" }}>
+
+      {/* HEADER */}
+      <div className="hd">
+        <div className="hd-row">
+          <button className="hamburger" onClick={() => setDrawerOpen(true)} aria-label="Open menu">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <rect x="2" y="4" width="16" height="2" fill="#F5F0E8" rx="1"/>
+              <rect x="2" y="9" width="16" height="2" fill="#F5F0E8" rx="1"/>
+              <rect x="2" y="14" width="16" height="2" fill="#F5F0E8" rx="1"/>
+            </svg>
+          </button>
+          <div className="hd-title" style={{ flex: 1, minWidth: 0 }}>
+            <div className="k">SAAS · STREAM I · MMXXVI</div>
+            <h1>{DATA.title}</h1>
+            <div className="t">{DATA.subtitle}</div>
+          </div>
+          <div className="hd-controls">
+            <span className="chip">{String(idx + 1).padStart(2, "0")} / {String(sections.length).padStart(2, "0")}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* DRAWER */}
+      <div className={`drawer-overlay ${drawerOpen ? "open" : ""}`} onClick={() => setDrawerOpen(false)} />
+      <div className={`drawer ${drawerOpen ? "open" : ""}`}>
+        <div className="drawer-head">
+          <div>
+            <div style={{ fontSize: 9, letterSpacing: "0.25em", color: "#888", textTransform: "uppercase", fontFamily: "monospace", marginBottom: 4 }}>NAVIGATION</div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: "#F5F0E8" }}>13 sheets</div>
+          </div>
+          <button onClick={() => setDrawerOpen(false)} aria-label="Close" style={{ background: "transparent", border: "1px solid #333", color: "#F5F0E8", width: 36, height: 36, borderRadius: 4, cursor: "pointer", fontSize: 22, lineHeight: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
+        </div>
+        <div className="drawer-list">
+          {sections.map((s, i) => {
+            const active = i === idx;
+            return (
+              <button key={s.id} className="drawer-item" onClick={() => { setIdx(i); setDrawerOpen(false); }} style={{ background: active ? "#1A1A1A" : "transparent", borderLeftColor: active ? s.color : "transparent" }}>
+                <div style={{ fontSize: 9, fontFamily: "monospace", color: active ? s.color : "#666", letterSpacing: "0.1em", marginBottom: 3, fontWeight: 700 }}>{s.sheetName}</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: active ? s.color : "#C8C4BC", letterSpacing: "-0.2px", lineHeight: 1.25 }}>{s.label}</div>
+                <div style={{ fontSize: 11, color: active ? "#C8C4BC" : "#666", marginTop: 3, fontFamily: "monospace", lineHeight: 1.35 }}>{s.subtitle}</div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* BODY */}
+      <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
+        {/* desktop sidebar */}
+        <div className="sidebar-desk">
+          {sections.map((s, i) => {
+            const active = i === idx;
+            return (
+              <button key={s.id} className="sb-item" onClick={() => setIdx(i)} style={{ background: active ? "#1A1A1A" : "transparent", borderLeftColor: active ? s.color : "transparent" }}>
+                <div style={{ fontSize: 9, fontFamily: "monospace", color: active ? s.color : "#666", letterSpacing: "0.1em", marginBottom: 3, fontWeight: 700 }}>{s.sheetName}</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: active ? s.color : "#C8C4BC", letterSpacing: "-0.2px" }}>{s.label}</div>
+                <div style={{ fontSize: 10.5, color: active ? "#C8C4BC" : "#666", marginTop: 3, fontFamily: "monospace" }}>{s.subtitle}</div>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* main */}
+        <div className="main" ref={mainRef} onTouchStart={onTouchStart} onTouchEnd={onTouchEnd} style={{ touchAction: "pan-y" }} key={idx}>
+          <div style={{ fontSize: 11, letterSpacing: "0.25em", color: accent, textTransform: "uppercase", fontFamily: "monospace", marginBottom: 8, fontWeight: 700 }}>
+            {cur.sheetName} · {cur.label}
+          </div>
+          <h2 className="headline" style={{ fontSize: 26, fontWeight: 700, color: "#F5F0E8", margin: "0 0 10px", lineHeight: 1.2, letterSpacing: "-0.4px" }}>
+            {cur.headline}
+          </h2>
+          {cur.body && (
+            <div style={{ fontSize: 14, color: "#C8C4BC", lineHeight: 1.6, marginBottom: 22, whiteSpace: "pre-wrap", maxWidth: 820 }}>{cur.body}</div>
+          )}
+
+          {/* Data table */}
+          {cur.tableHeaders && cur.tableHeaders.length > 0 && cur.tableRows.length > 0 && (
+            <div className="tbl-wrap">
+              <div className="tbl-scroll">
+                <table className="tbl">
+                  <thead>
+                    <tr>{cur.tableHeaders.map((h, i) => <th key={i}>{h}</th>)}</tr>
+                  </thead>
+                  <tbody>
+                    {cur.tableRows.map((row, ri) => (
+                      <tr key={ri}>
+                        {row.map((cell, ci) => (
+                          <td key={ci}>{typeof cell === "number" ? cell.toLocaleString() : cell}</td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* Note */}
+          {cur.note && (
+            <div style={{ background: "#0F0F0F", borderLeft: `3px solid ${accent}`, padding: "14px 18px", marginTop: 18, fontSize: 13, color: "#C8C4BC", lineHeight: 1.55, maxWidth: 1000 }}>
+              {cur.note}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* PILL NAV */}
+      <div className="pill-nav">
+        <button onClick={() => setIdx(i => Math.max(0, i - 1))} disabled={idx === 0}>← Prev</button>
+        <button className="next" onClick={() => setIdx(i => Math.min(sections.length - 1, i + 1))} disabled={idx === sections.length - 1}>Next →</button>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+
+<script id="playbook-data" type="application/json">{
+  "title": "BiRAGAS \u00b7 SaaS Stream",
+  "subtitle": "Workbook Playbook \u00b7 Stream I of V \u00b7 47% of 2030 Base Revenue \u00b7 $290.8M",
+  "tagline": "13-sheet investor walkthrough \u00b7 phone-optimized",
+  "sections": [
+    {
+      "id": "01_cover",
+      "sheetName": "01_Cover",
+      "label": "Cover & Contents",
+      "subtitle": "Stream I overview \u00b7 TOC",
+      "color": "#3B82F6",
+      "headline": "SaaS Stream \u00b7 Comprehensive Workbook",
+      "body": "STREAM I OF V \u00b7 47% OF 2030 BASE REVENUE \u00b7 $290.8M\nBiRAGAS is the new core of a larger platform \u2014 the operating system for drug design,\ndrug discovery, patient stratification, and Causal Confidence Scoring of outcome truthfulness.\nStream I monetizes the OS license itself: 562 customers across six cohorts by 2030.\nTABLE OF CONTENTS",
+      "tableHeaders": [
+        "01_Cover",
+        "This page"
+      ],
+      "tableRows": [
+        [
+          "02_TAM_SAM_SOM",
+          "AI pharma SaaS market sizing waterfall \u00b7 TAM through SOM"
+        ],
+        [
+          "03_BigPharma_AI_Programs",
+          "Top-20 pharma \u00d7 named AI programs + partnerships + R&D spend"
+        ],
+        [
+          "04_MidCap_Biotech",
+          "30 mid-cap biotechs with AI/computational initiatives"
+        ],
+        [
+          "05_CROs_AMCs_Gov",
+          "CRO channel partners, named AMCs, government agencies"
+        ],
+        [
+          "06_Customer_Ramp",
+          "6-cohort customer-count ramp 2026 \u2192 2030"
+        ],
+        [
+          "07_ASP_Benchmarks",
+          "ASP benchmarks vs Schr\u00f6dinger / AbCellera / Recursion 10-Ks"
+        ],
+        [
+          "08_5Y_PnL_Stream_I",
+          "Stream I 5-year P&L with cohort-level breakouts"
+        ],
+        [
+          "09_Penetration_Math",
+          "Penetration % by cohort with sensitivity (bear/base/bull)"
+        ],
+        [
+          "10_Market_Share",
+          "BiRAGAS share of various market definitions"
+        ],
+        [
+          "11_Conversion_Targets",
+          "Named accounts \u00d7 timeline \u00d7 expected ARR"
+        ],
+        [
+          "12_Comparable_AI_Companies",
+          "Recursion \u00b7 Schr\u00f6dinger \u00b7 AbCellera \u00b7 BenevolentAI \u00b7 Tempus etc."
+        ],
+        [
+          "13_Sources_References",
+          "53-source bibliography + comparable 10-K disclosures"
+        ]
+      ],
+      "note": ""
+    },
+    {
+      "id": "02_tam_sam_som",
+      "sheetName": "02_TAM_SAM_SOM",
+      "label": "TAM \u00b7 SAM \u00b7 SOM",
+      "subtitle": "$50B \u2192 $13.5B \u2192 $1.6B \u2192 $290.8M",
+      "color": "#C8A560",
+      "headline": "AI Pharma SaaS \u2014 Market Sizing Waterfall",
+      "body": "From $50B broad envelope to $1.6B BiRAGAS SOM by 2030",
+      "tableHeaders": [
+        "TIER",
+        "DEFINITION",
+        "2024 ($B)",
+        "2028 ($B)",
+        "2030 ($B)",
+        "CAGR",
+        "SOURCES"
+      ],
+      "tableRows": [
+        [
+          "TAM \u00b7 Broad",
+          "Pharma external R&D AI spend (all categories)",
+          "5.5",
+          "30.0",
+          "50.0",
+          "37%",
+          "McKinsey \u00b7 Deloitte \u00b7 BCG"
+        ],
+        [
+          "TAM \u00b7 Narrow",
+          "AI drug-discovery platform tools (defined market)",
+          "2.5",
+          "7.5",
+          "13.5",
+          "33%",
+          "Grand View \u00b7 Markets & Markets \u00b7 Precedence"
+        ],
+        [
+          "Sub-Seg 1",
+          "Target ID & Validation",
+          "3.2",
+          "7.8",
+          "11.0",
+          "23%",
+          "Markets & Markets"
+        ],
+        [
+          "Sub-Seg 2",
+          "Lead Discovery / Generative Chemistry",
+          "1.5",
+          "3.8",
+          "5.5",
+          "24%",
+          "Fortune Business Insights"
+        ],
+        [
+          "Sub-Seg 3",
+          "Clinical Trial Design / Patient Selection",
+          "1.8",
+          "4.5",
+          "6.5",
+          "23%",
+          "IQVIA \u00b7 Cortellis"
+        ],
+        [
+          "Sub-Seg 4",
+          "Real-World Evidence",
+          "2.5",
+          "5.5",
+          "8.0",
+          "21%",
+          "EvaluatePharma \u00b7 GlobalData"
+        ],
+        [
+          "Sub-Seg 5",
+          "Regulatory / Causal Evidence (BiRAGAS new category)",
+          "0",
+          "1.0",
+          "5.0",
+          "\u2014",
+          "FDA BQP framework"
+        ],
+        [
+          "Sub-Seg 6",
+          "Companion Diagnostics",
+          "7.0",
+          "13.0",
+          "18.0",
+          "17%",
+          "Fortune Business Insights \u00b7 Markets & Markets"
+        ],
+        [
+          "SAM",
+          "Serviceable AI-DD platform market addressable by BiRAGAS",
+          "1.2",
+          "5.0",
+          "9.5",
+          "41%",
+          "Bottom-up build (BiRAGAS internal)"
+        ],
+        [
+          "SOM",
+          "BiRAGAS Stream I serviceable obtainable 2030 (base case)",
+          "\u2014",
+          "\u2014",
+          "0.29",
+          "\u2014",
+          "562 customers \u00d7 cohort ASPs"
+        ],
+        [
+          "SOM \u00b7 Bull",
+          "Bull case 2030 (penetration \u00d7 1.6)",
+          "\u2014",
+          "\u2014",
+          "0.47",
+          "\u2014",
+          "Bull-case sensitivity"
+        ],
+        [
+          "SOM \u00b7 Bear",
+          "Bear case 2030 (penetration \u00d7 0.5)",
+          "\u2014",
+          "\u2014",
+          "0.15",
+          "\u2014",
+          "Bear-case sensitivity"
+        ]
+      ],
+      "note": "NOTE: 2030 SOM ($290.8M) represents 2.2% of the narrow AI-DD platform market \u2014 and 0.6% of the broad pharma external R&D AI envelope. Deliberately conservative."
+    },
+    {
+      "id": "03_bigpharma_ai_programs",
+      "sheetName": "03_BigPharma_AI_Programs",
+      "label": "Top-20 Big Pharma",
+      "subtitle": "Named programs + R&D + entry",
+      "color": "#14B8A6",
+      "headline": "Top-20 Big Pharma \u2014 Named AI Programs & Partnerships",
+      "body": "Internal + external AI initiatives by company \u00b7 R&D spend \u00b7 BiRAGAS entry vector",
+      "tableHeaders": [
+        "PHARMA",
+        "2024 REVENUE ($B)",
+        "TOTAL R&D ($B)",
+        "EST. AI/R&D SPEND ($M)",
+        "INTERNAL AI PROGRAM",
+        "NAMED EXTERNAL PARTNERSHIPS",
+        "DISCLOSED PAIN POINT",
+        "BIRAGAS ENTRY"
+      ],
+      "tableRows": [
+        [
+          "Pfizer",
+          58,
+          11,
+          1100,
+          "Concerto data platform",
+          "BenevolentAI \u00b7 CytoReason (IBD) \u00b7 XtalPi \u00b7 ConcertAI \u00b7 Tempus",
+          "Post-Seagen integration \u00b7 Phase II attrition ~60% \u00b7 oncology pivot",
+          "Enterprise SaaS via R&D Innovation team"
+        ],
+        [
+          "Roche/Genentech",
+          67,
+          14,
+          1500,
+          "Prescient AI \u00b7 Roche Data Analytics",
+          "Recursion ($12B deal) \u00b7 Foundation Medicine (acq) \u00b7 Flatiron (acq)",
+          "Foundation One renewal \u00b7 CDx pipeline \u00b7 RNA-therapeutics push",
+          "Genentech Computational Biology + Foundation Medicine"
+        ],
+        [
+          "Novartis",
+          48,
+          9.5,
+          700,
+          "Data42 platform \u00b7 NIBR Computational Sciences",
+          "Microsoft (AI cloud) \u00b7 BenevolentAI \u00b7 Insilico Medicine",
+          "Cell-and-gene cost scaling \u00b7 cardiovascular pipeline gap",
+          "Data42 integration + NIBR scientific exchange"
+        ],
+        [
+          "AstraZeneca",
+          45,
+          10.9,
+          800,
+          "Centre for Genomics Research \u00b7 AZ Comp Pathology",
+          "BenevolentAI (CKD, IPF) \u00b7 Sosei/Heptares \u00b7 Tempus",
+          "$80B-by-2030 target \u00b7 oncology + rare disease pipeline",
+          "Centre for Genomics Research scientific exchange"
+        ],
+        [
+          "Eli Lilly",
+          45,
+          9.3,
+          700,
+          "Lilly Research Labs \u00b7 OIDD platform",
+          "Verge Genomics ($694M, ALS) \u00b7 XtalPi \u00b7 Atomwise",
+          "Mounjaro post-launch pipeline \u00b7 Kisunla launch \u00b7 Verge scaling",
+          "Lilly Translational Medicine via Verge introduction"
+        ],
+        [
+          "Merck (US)",
+          60,
+          13.6,
+          600,
+          "MSD Computational Biology",
+          "Iktos \u00b7 SAS Institute \u00b7 Atomwise \u00b7 Cyclica",
+          "Keytruda LOE 2028 \u00b7 oncology successor pipeline",
+          "Oncology Innovation Hub"
+        ],
+        [
+          "Sanofi",
+          45,
+          7.2,
+          650,
+          "Sanofi AI Centre Toronto \u00b7 AIDA platform",
+          "Insilico ($1.2B) \u00b7 Atomwise ($1B) \u00b7 Owkin (Aily Labs) \u00b7 BioMap",
+          "Dupixent diversification \u00b7 mRNA platform commercialization",
+          "R&D Innovation + Translate Bio team"
+        ],
+        [
+          "GSK",
+          40,
+          7.4,
+          700,
+          "AI/ML Hub \u00b7 Open Targets consortium",
+          "Tempus \u00b7 Cerebras (AI compute)",
+          "Post-Haleon rebuild \u00b7 vaccines + immunology",
+          "Computational Sciences + Open Targets"
+        ],
+        [
+          "AbbVie",
+          56,
+          7.7,
+          500,
+          "AbbVie AI/ML group",
+          "AiCure \u00b7 Owkin \u00b7 Cyclica",
+          "Humira LOE absorption \u00b7 pipeline diversification",
+          "AbbVie Discovery + IO partnerships"
+        ],
+        [
+          "Bristol-Myers Squibb",
+          45,
+          9.4,
+          600,
+          "Translational Medicine Bioinformatics",
+          "Schr\u00f6dinger ($2.7B) \u00b7 Exscientia ($1.2B) \u00b7 Recursion",
+          "Opdivo + Eliquis LOE 2028 mitigation",
+          "Translational Medicine + Computational Biology"
+        ],
+        [
+          "Johnson & Johnson",
+          88,
+          15.5,
+          500,
+          "Janssen R&D Data Science",
+          "Atomwise \u00b7 Otsuka \u00b7 Glooko",
+          "Stelara LOE \u00b7 pipeline diversification",
+          "Janssen R&D Data Science"
+        ],
+        [
+          "Bayer",
+          54,
+          7.4,
+          400,
+          "Pharma Computational Life Science",
+          "Recursion (oncology) \u00b7 Atomwise \u00b7 Cradle.bio",
+          "Oncology + women's health rebuild",
+          "Bayer Pharmaceuticals Computational Life Science"
+        ],
+        [
+          "Takeda",
+          32,
+          6,
+          400,
+          "Takeda Computational Sciences",
+          "Numerate \u00b7 Recursion \u00b7 PostEra (gut microbiome)",
+          "Rare disease + GI pipeline \u00b7 post-Shire integration",
+          "Takeda Open Innovation"
+        ],
+        [
+          "Boehringer Ingelheim",
+          30,
+          5.8,
+          400,
+          "BI Innovation Lab Computational Biology",
+          "Phenomic AI \u00b7 Cradle.bio \u00b7 Healx \u00b7 Insilico Medicine",
+          "IPF + oncology pipeline \u00b7 cardiovascular renewal",
+          "BI Innovation Lab"
+        ],
+        [
+          "Amgen",
+          28,
+          5.9,
+          500,
+          "Amgen Computational + Functional Genomics",
+          "Generate Biomedicines (multi-target) \u00b7 deCODE genetics (subsidiary)",
+          "Repatha franchise \u00b7 obesity pipeline",
+          "Generate Biomedicines extension"
+        ],
+        [
+          "Gilead",
+          27,
+          5.8,
+          300,
+          "Gilead Computational Biology",
+          "XtalPi \u00b7 Insitro (oncology)",
+          "HIV LOE \u00b7 oncology rebuild post-Trodelvy",
+          "Gilead Oncology + Computational Biology"
+        ],
+        [
+          "Regeneron",
+          13,
+          4.4,
+          350,
+          "Regeneron Genetics Center \u00b7 deCODE-style internal",
+          "Internal-only (no major external AI partnerships)",
+          "Eylea LOE \u00b7 pipeline diversification",
+          "Regeneron Genetics Center co-research"
+        ],
+        [
+          "Vertex",
+          10,
+          3,
+          200,
+          "Vertex Research Computing",
+          "Schr\u00f6dinger collaboration (lead optimization)",
+          "CF franchise diversification \u00b7 cell + gene scale-up",
+          "Vertex Research Computing + Schr\u00f6dinger overlap"
+        ],
+        [
+          "Biogen",
+          10,
+          2.5,
+          200,
+          "Biogen Computational Biology",
+          "Atomwise \u00b7 Apple Watch (digital biomarker)",
+          "Leqembi commercialization \u00b7 neuro pipeline",
+          "Biogen Translational Medicine"
+        ],
+        [
+          "Moderna",
+          7,
+          4.8,
+          400,
+          "Internal mRNA AI design platform (proprietary)",
+          "Multi-vendor (proprietary; few large external AI deals)",
+          "mRNA platform diversification \u00b7 oncology + rare disease",
+          "Moderna AI/ML team via mRNA tech council"
+        ],
+        [
+          "TOTAL \u00b7 TOP 20",
+          808,
+          161.1,
+          11500,
+          "$54M Big Pharma cohort revenue = 0.48% of total estimated AI/R&D spend \u2192 highly conservative",
+          "",
+          "",
+          ""
+        ]
+      ],
+      "note": ""
+    },
+    {
+      "id": "04_midcap_biotech",
+      "sheetName": "04_MidCap_Biotech",
+      "label": "Mid-cap Biotech",
+      "subtitle": "30 mid-cap biotechs",
+      "color": "#EF4444",
+      "headline": "Mid-Cap Biotech \u2014 Named Targets with AI/Computational Initiatives",
+      "body": "130 mid-cap customers by 2030 \u00b7 $0.70M modular ASP \u00b7 $91M cohort revenue",
+      "tableHeaders": [
+        "COMPANY",
+        "2024 REV ($B)",
+        "THERAPEUTIC FOCUS",
+        "AI/COMPUTATIONAL EFFORT",
+        "BIRAGAS HOOK"
+      ],
+      "tableRows": [
+        [
+          "Alnylam Pharmaceuticals",
+          1.7,
+          "RNA interference (siRNA)",
+          "siRNA target ID; cardiovascular pipeline",
+          "Modular SaaS + cardiovascular biomarker co-dev"
+        ],
+        [
+          "Ionis Pharmaceuticals",
+          0.6,
+          "Antisense oligonucleotides",
+          "ASO target validation",
+          "RNA-therapeutics modular SaaS"
+        ],
+        [
+          "Sarepta Therapeutics",
+          1.5,
+          "Gene therapy (DMD focus)",
+          "Internal AI for gene-therapy design",
+          "Patient stratification + biomarker"
+        ],
+        [
+          "Arcturus Therapeutics",
+          0.3,
+          "mRNA + LNP platform",
+          "mRNA design + LNP optimization",
+          "Causal target + LNP biomarker"
+        ],
+        [
+          "BioMarin",
+          2.4,
+          "Rare/genetic disease",
+          "Genetic disease causal modeling",
+          "Rare-disease patient stratification"
+        ],
+        [
+          "Beam Therapeutics",
+          0.1,
+          "Base-editing CRISPR",
+          "Base-editing target ID",
+          "Off-target causal mapping"
+        ],
+        [
+          "Intellia Therapeutics",
+          0.1,
+          "In vivo CRISPR (CTX001 et al.)",
+          "Gene-editing target ID",
+          "Causal target validation"
+        ],
+        [
+          "CRISPR Therapeutics",
+          0.4,
+          "Ex vivo + in vivo CRISPR (Casgevy)",
+          "Casgevy + future indications",
+          "Patient stratification for Casgevy"
+        ],
+        [
+          "Editas Medicine",
+          0.1,
+          "CRISPR sickle cell",
+          "SC/SCD biomarker discovery",
+          "Causal target ID"
+        ],
+        [
+          "Verve Therapeutics",
+          0.1,
+          "In vivo CRISPR cardiovascular",
+          "Cardiovascular target validation",
+          "Causal modeling for in vivo gene editing"
+        ],
+        [
+          "Incyte",
+          4.2,
+          "Oncology (JAK inhibitor leader)",
+          "Jakafi successor pipeline",
+          "Oncology target ID + stratification"
+        ],
+        [
+          "Exelixis",
+          2.1,
+          "Oncology (Cabometyx)",
+          "Combination-therapy design",
+          "Causal combo-design"
+        ],
+        [
+          "Halozyme",
+          1,
+          "ENHANZE delivery platform",
+          "Co-formulation modeling",
+          "Co-formulation causal modeling"
+        ],
+        [
+          "Mirati Therapeutics (BMS)",
+          0.4,
+          "KRAS G12C (Krazati)",
+          "KRAS-mutation patient stratification",
+          "Causal mutation analysis"
+        ],
+        [
+          "Recursion Pharmaceuticals",
+          0.1,
+          "AI-DD platform (image-omics)",
+          "Recursion OS itself",
+          "Partnership \u00b7 BiRAGAS as causal layer underneath"
+        ],
+        [
+          "Vertex Pharmaceuticals",
+          10,
+          "Cystic fibrosis + diversification",
+          "Internal Vertex Research Computing",
+          "Diversification asset co-dev"
+        ],
+        [
+          "Jazz Pharmaceuticals",
+          4,
+          "Sleep + oncology + neuroscience",
+          "Sleep apnea + oncology biomarker",
+          "Multi-disease causal modeling"
+        ],
+        [
+          "Insmed",
+          0.4,
+          "Rare lung disease",
+          "Brensocatib biomarker discovery",
+          "Causal target validation"
+        ],
+        [
+          "Genmab",
+          3,
+          "Antibody therapeutics",
+          "Antibody-target causal modeling",
+          "Antibody target ID + CDx"
+        ],
+        [
+          "United Therapeutics",
+          2.4,
+          "Pulmonary hypertension + organ-tx",
+          "Transplant biomarker discovery",
+          "Transplant causal stratification"
+        ],
+        [
+          "Tempus Labs",
+          0.7,
+          "Clinical-omics aggregator",
+          "Tempus xT panel + AI platform",
+          "Clinical-omics integration partnership"
+        ],
+        [
+          "Guardant Health",
+          0.6,
+          "Liquid biopsy",
+          "Guardant360 CDx",
+          "Liquid-biopsy biomarker co-dev"
+        ],
+        [
+          "Veracyte",
+          0.4,
+          "Diagnostic genomics",
+          "Decipher \u00b7 Afirma \u00b7 Envisia",
+          "Sub-specialty CDx"
+        ],
+        [
+          "Natera",
+          1.2,
+          "MRD + reproductive",
+          "Signatera MRD",
+          "MRD biomarker co-dev"
+        ],
+        [
+          "Caris Life Sciences (private)",
+          0.7,
+          "Cancer profiling",
+          "MI Profile \u00b7 MI Tumor Seek",
+          "Multi-omics CDx co-dev"
+        ],
+        [
+          "Exscientia",
+          0.1,
+          "AI-DD / generative chemistry",
+          "Centaur platform",
+          "BiRAGAS as causal substrate (potential consolidation)"
+        ],
+        [
+          "Insilico Medicine (private)",
+          0.1,
+          "AI-DD / generative chemistry",
+          "Pharma.AI \u00b7 Chemistry42",
+          "Causal layer underneath"
+        ],
+        [
+          "BenevolentAI",
+          0,
+          "AI knowledge-graph LLM",
+          "Benevolent Platform",
+          "Causal layer integration"
+        ],
+        [
+          "Schr\u00f6dinger",
+          0.2,
+          "Molecular dynamics simulation",
+          "LiveDesign + computational chemistry",
+          "Causal evidence layer for sponsors"
+        ],
+        [
+          "Atomwise (private)",
+          0.1,
+          "AI-DD / virtual screening",
+          "AtomNet platform",
+          "Causal target ID partnership"
+        ]
+      ],
+      "note": ""
+    },
+    {
+      "id": "05_cros_amcs_gov",
+      "sheetName": "05_CROs_AMCs_Gov",
+      "label": "CROs \u00b7 AMCs \u00b7 Gov",
+      "subtitle": "Channel partners + institutions",
+      "color": "#A855F7",
+      "headline": "Channel Partners \u2014 CROs \u00b7 AMCs \u00b7 Government",
+      "body": "Cohorts 4\u20136 of Stream I \u00b7 $59M combined 2030 revenue\nCOHORT 4 \u00b7 CROs \u00b7 32 CUSTOMERS BY 2030 \u00b7 $1.00M ASP \u00b7 $32M REVENUE",
+      "tableHeaders": [
+        "CRO",
+        "SCALE",
+        "SPONSOR PROGRAMS PER CONTRACT",
+        "BIRAGAS HOOK"
+      ],
+      "tableRows": [
+        [
+          "IQVIA",
+          "$15B revenue \u00b7 #1 global CRO",
+          "100\u2013200",
+          "Audit-grade dossier as standard sponsor deliverable"
+        ],
+        [
+          "ICON plc",
+          "$8B revenue \u00b7 #2 post-PRA merger",
+          "100\u2013150",
+          "BQP-ready package for FDA submissions"
+        ],
+        [
+          "Parexel",
+          "Private \u00b7 $3B+ regulatory specialist",
+          "60\u2013100",
+          "Companion-diagnostic co-design layer"
+        ],
+        [
+          "Labcorp Drug Development",
+          "$15B parent \u00b7 integrated dx + dev",
+          "80\u2013120",
+          "LDT distribution co-marketing"
+        ],
+        [
+          "Charles River Labs",
+          "$4B \u00b7 preclinical + early clinical",
+          "150\u2013250",
+          "Causal target prioritization at preclinical entry"
+        ],
+        [
+          "WuXi AppTec",
+          "$5B+ \u00b7 global integrated CRO/CDMO",
+          "120\u2013200",
+          "Asia-Pacific sponsor distribution"
+        ],
+        [
+          "Syneos Health",
+          "Public \u00b7 oncology + neuro focus",
+          "60\u2013100",
+          "Oncology causal stratification"
+        ],
+        [
+          "Medpace",
+          "$2B \u00b7 mid-tier focused",
+          "50\u201380",
+          "Mid-cap biotech bundled offering"
+        ],
+        [
+          "COHORT 5 \u00b7 AMCs \u00b7 80 SEATS BY 2030 \u00b7 $0.15M ASP \u00b7 $12M REVENUE",
+          "",
+          "",
+          ""
+        ],
+        [
+          "AMC",
+          "ROLE WITH BIRAGAS",
+          "",
+          ""
+        ],
+        [
+          "Massachusetts General Hospital",
+          "Translational research + publication flywheel",
+          "",
+          ""
+        ],
+        [
+          "Cleveland Clinic",
+          "Multi-disease clinical research network",
+          "",
+          ""
+        ],
+        [
+          "Stanford Medicine",
+          "Translational immunology + nephrology",
+          "",
+          ""
+        ],
+        [
+          "Penn Medicine",
+          "Alzheimer + IBD biomarker validation",
+          "",
+          ""
+        ],
+        [
+          "MD Anderson Cancer Center",
+          "Largest US heme-onc center (AML + solid tumor)",
+          "",
+          ""
+        ],
+        [
+          "Mayo Clinic",
+          "National referral + multi-disease network",
+          "",
+          ""
+        ],
+        [
+          "Johns Hopkins",
+          "Wound + diabetic + oncology research",
+          "",
+          ""
+        ],
+        [
+          "UCSF",
+          "IBD + Alzheimer + immunology",
+          "",
+          ""
+        ],
+        [
+          "Mount Sinai",
+          "IBD center of excellence",
+          "",
+          ""
+        ],
+        [
+          "Duke Health",
+          "Oncology + cardiovascular",
+          "",
+          ""
+        ],
+        [
+          "COHORT 6 \u00b7 GOVERNMENT / RESEARCH AGENCIES \u00b7 60 SEATS BY 2030 \u00b7 $0.25M ASP \u00b7 $15M REVENUE",
+          "",
+          "",
+          ""
+        ],
+        [
+          "AGENCY",
+          "PROCUREMENT VEHICLE",
+          "",
+          ""
+        ],
+        [
+          "NIH (NHGRI \u00b7 NIAID \u00b7 NCI \u00b7 NIDDK \u00b7 NHLBI)",
+          "Grant-attached research infrastructure procurement",
+          "",
+          ""
+        ],
+        [
+          "BARDA",
+          "Biothreat preparedness infrastructure",
+          "",
+          ""
+        ],
+        [
+          "DoD CDMRP",
+          "Congressionally-Directed Medical Research Programs",
+          "",
+          ""
+        ],
+        [
+          "ARPA-H",
+          "Advanced Research Projects Agency for Health",
+          "",
+          ""
+        ],
+        [
+          "Wellcome Sanger Institute (UK)",
+          "Open Targets consortium partnership",
+          "",
+          ""
+        ],
+        [
+          "Genome Canada",
+          "Canadian genome research infrastructure",
+          "",
+          ""
+        ],
+        [
+          "EMBL-EBI (Europe)",
+          "European Bioinformatics Institute open consortium",
+          "",
+          ""
+        ]
+      ],
+      "note": ""
+    },
+    {
+      "id": "06_customer_ramp",
+      "sheetName": "06_Customer_Ramp",
+      "label": "Customer Ramp",
+      "subtitle": "6 cohorts \u00b7 2026\u21922030",
+      "color": "#10B981",
+      "headline": "6-Cohort Customer Ramp \u00b7 2026 \u2192 2030",
+      "body": "From 50 total customers to 562 \u2014 twelve-fold expansion",
+      "tableHeaders": [
+        "YEAR",
+        "BIG PHARMA",
+        "MID-CAP",
+        "SMALL BIOTECH",
+        "CROs",
+        "AMCs",
+        "GOVERNMENT",
+        "TOTAL",
+        "REVENUE ($M)"
+      ],
+      "tableRows": [
+        [
+          "2026",
+          3,
+          10,
+          18,
+          3,
+          10,
+          6,
+          50,
+          27
+        ],
+        [
+          "2027",
+          8,
+          28,
+          55,
+          8,
+          22,
+          14,
+          135,
+          78.5
+        ],
+        [
+          "2028",
+          16,
+          62,
+          112,
+          16,
+          42,
+          28,
+          276,
+          152
+        ],
+        [
+          "2029",
+          24,
+          100,
+          182,
+          26,
+          64,
+          46,
+          442,
+          228
+        ],
+        [
+          "2030",
+          30,
+          130,
+          230,
+          32,
+          80,
+          60,
+          562,
+          290.8
+        ],
+        [
+          "GROWTH (2026\u21922030)",
+          "10\u00d7",
+          "13\u00d7",
+          "12.8\u00d7",
+          "10.7\u00d7",
+          "8\u00d7",
+          "10\u00d7",
+          "11.2\u00d7",
+          "10.8\u00d7"
+        ]
+      ],
+      "note": ""
+    },
+    {
+      "id": "07_asp_benchmarks",
+      "sheetName": "07_ASP_Benchmarks",
+      "label": "ASP Benchmarks",
+      "subtitle": "vs Schr\u00f6dinger \u00b7 AbCellera \u00b7 Recursion",
+      "color": "#F59E0B",
+      "headline": "ASP Benchmarks \u2014 vs Public 10-K Disclosures",
+      "body": "Conservative discount (15\u201320%) to reflect BiRAGAS pre-Series-A commercial maturity",
+      "tableHeaders": [
+        "COHORT",
+        "BIRAGAS ASP",
+        "COMPARABLE (10-K)",
+        "PUBLIC ASP",
+        "DISCOUNT",
+        "RATIONALE"
+      ],
+      "tableRows": [
+        [
+          "Big Pharma",
+          "$1.80M",
+          "Schr\u00f6dinger FY24 10-K \u00b7 enterprise contracts",
+          "$2.20M",
+          "18%",
+          "Pre-Series-A maturity adjustment vs. mature comparable"
+        ],
+        [
+          "Mid-cap Biotech",
+          "$0.70M",
+          "AbCellera 10-K \u00b7 mid-tier program contracts",
+          "$0.60\u20130.90M",
+          "0%",
+          "Midpoint of disclosed AbCellera range"
+        ],
+        [
+          "Small Biotech",
+          "$0.20M",
+          "Self-serve SaaS enterprise comparables",
+          "$0.20\u20130.30M",
+          "\u2014",
+          "PLG self-serve tier \u00b7 benchmark-grade entry pricing"
+        ],
+        [
+          "CROs",
+          "$1.00M",
+          "Recursion FY24 10-K \u00b7 CRO partnership values",
+          "$1.20M",
+          "17%",
+          "Discounted to $1.00M for channel ramp"
+        ],
+        [
+          "AMCs",
+          "$0.15M",
+          "Research-tier academic SaaS comparables",
+          "$0.15\u20130.25M",
+          "\u2014",
+          "Research-tier credibility pricing"
+        ],
+        [
+          "Government / NIH",
+          "$0.25M",
+          "Grant-attached procurement vehicles",
+          "$0.20\u20130.30M",
+          "\u2014",
+          "Standard federal-vehicle pricing"
+        ]
+      ],
+      "note": ""
+    },
+    {
+      "id": "08_5y_pnl_stream_i",
+      "sheetName": "08_5Y_PnL_Stream_I",
+      "label": "5-Year P&L",
+      "subtitle": "Stream I cohort breakouts",
+      "color": "#06B6D4",
+      "headline": "Stream I \u00b7 5-Year P&L Detail",
+      "body": "Cohort-level revenue build \u00b7 COGS \u00b7 gross margin \u00b7 Stream-I contribution",
+      "tableHeaders": [
+        "LINE ITEM",
+        "2026",
+        "2027",
+        "2028",
+        "2029",
+        "2030"
+      ],
+      "tableRows": [
+        [
+          "BIG PHARMA \u2014 customers",
+          3,
+          8,
+          16,
+          24,
+          30
+        ],
+        [
+          "  Big Pharma ASP",
+          1.8,
+          1.8,
+          1.8,
+          1.8,
+          1.8
+        ],
+        [
+          "  Big Pharma revenue ($M)",
+          5.4,
+          14.4,
+          28.8,
+          43.2,
+          54
+        ],
+        [
+          "MID-CAP BIOTECH \u2014 customers",
+          10,
+          28,
+          62,
+          100,
+          130
+        ],
+        [
+          "  Mid-cap ASP",
+          0.7,
+          0.7,
+          0.7,
+          0.7,
+          0.7
+        ],
+        [
+          "  Mid-cap revenue ($M)",
+          7,
+          19.6,
+          43.4,
+          70,
+          91
+        ],
+        [
+          "SMALL BIOTECH \u2014 customers",
+          18,
+          55,
+          112,
+          182,
+          230
+        ],
+        [
+          "  Small ASP",
+          0.2,
+          0.2,
+          0.2,
+          0.2,
+          0.2
+        ],
+        [
+          "  Small revenue ($M)",
+          3.6,
+          11,
+          22.4,
+          36.4,
+          46
+        ],
+        [
+          "CROs \u2014 customers",
+          3,
+          8,
+          16,
+          26,
+          32
+        ],
+        [
+          "  CRO ASP",
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          "  CRO revenue ($M)",
+          3,
+          8,
+          16,
+          26,
+          32
+        ],
+        [
+          "AMCs \u2014 customers",
+          10,
+          22,
+          42,
+          64,
+          80
+        ],
+        [
+          "  AMC ASP",
+          0.15,
+          0.15,
+          0.15,
+          0.15,
+          0.15
+        ],
+        [
+          "  AMC revenue ($M)",
+          1.5,
+          3.3,
+          6.3,
+          9.6,
+          12
+        ],
+        [
+          "GOVERNMENT \u2014 customers",
+          6,
+          14,
+          28,
+          46,
+          60
+        ],
+        [
+          "  Government ASP",
+          0.25,
+          0.25,
+          0.25,
+          0.25,
+          0.25
+        ],
+        [
+          "  Government revenue ($M)",
+          1.5,
+          3.5,
+          7,
+          11.5,
+          15
+        ],
+        [
+          "STREAM I REVENUE ($M)",
+          22,
+          59.8,
+          123.9,
+          196.7,
+          250
+        ],
+        [
+          "Recurring \u00b7 Net Revenue Retention",
+          "\u2014",
+          "118%",
+          "125%",
+          "130%",
+          "132%"
+        ],
+        [
+          "Expansion uplift ($M)",
+          0,
+          5,
+          20,
+          35,
+          40.8
+        ],
+        [
+          "STREAM I TOTAL ($M)",
+          22,
+          64.8,
+          143.9,
+          231.7,
+          290.8
+        ],
+        [
+          "COGS (~18% blended)",
+          4,
+          11.7,
+          25.9,
+          41.7,
+          52.3
+        ],
+        [
+          "Gross Profit",
+          18,
+          53.1,
+          118,
+          190,
+          238.5
+        ],
+        [
+          "Gross Margin",
+          "82%",
+          "82%",
+          "82%",
+          "82%",
+          "82%"
+        ]
+      ],
+      "note": ""
+    },
+    {
+      "id": "09_penetration_math",
+      "sheetName": "09_Penetration_Math",
+      "label": "Penetration Math",
+      "subtitle": "Bear \u00b7 Base \u00b7 Bull sensitivity",
+      "color": "#EC4899",
+      "headline": "Penetration % by Cohort \u2014 Bear / Base / Bull Sensitivity",
+      "body": "Year-5 SAM penetration assumptions \u00b7 all conservative \u00b7 documented multipliers",
+      "tableHeaders": [
+        "COHORT",
+        "ADDRESSABLE POOL (2030)",
+        "BIRAGAS Y5 CUST.",
+        "BASE %",
+        "BEAR (\u00d70.5)",
+        "BULL (\u00d71.6)"
+      ],
+      "tableRows": [
+        [
+          "Big Pharma",
+          "~150 globally \u00b7 ~50 with R&D >$3B",
+          30,
+          "0.6% top-150 / 60% top-50",
+          "0.3% / 30%",
+          "0.95% / 96%"
+        ],
+        [
+          "Mid-cap Biotech",
+          "~2,500 with active R&D pipeline",
+          130,
+          "5.2%",
+          "2.6%",
+          "8.3%"
+        ],
+        [
+          "Small Biotech",
+          "~7,000 active globally",
+          230,
+          "3.3%",
+          "1.6%",
+          "5.3%"
+        ],
+        [
+          "CROs",
+          "~120 global CROs (top tier ~50)",
+          32,
+          "27% of top 50",
+          "13%",
+          "42%"
+        ],
+        [
+          "AMCs",
+          "~150 US AMCs \u00b7 ~400 globally",
+          80,
+          "20%",
+          "10%",
+          "32%"
+        ],
+        [
+          "Government/NIH",
+          "~80 US + ~120 international agencies",
+          60,
+          "30%",
+          "15%",
+          "48%"
+        ],
+        [
+          "STREAM I REVENUE BY CASE (2030)",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        [
+          "CASE",
+          "REVENUE",
+          "MARGIN",
+          "EBITDA",
+          "",
+          ""
+        ],
+        [
+          "Bear (\u00d70.5)",
+          "$148M",
+          "78%",
+          "$73M",
+          "",
+          ""
+        ],
+        [
+          "Base (\u00d71.0)",
+          "$290.8M",
+          "82%",
+          "$160M",
+          "",
+          ""
+        ],
+        [
+          "Bull (\u00d71.6)",
+          "$467M",
+          "85%",
+          "$285M",
+          "",
+          ""
+        ]
+      ],
+      "note": ""
+    },
+    {
+      "id": "10_market_share",
+      "sheetName": "10_Market_Share",
+      "label": "Market Share",
+      "subtitle": "BiRAGAS share across definitions",
+      "color": "#8B5CF6",
+      "headline": "BiRAGAS Market Share \u2014 by Definition",
+      "body": "Same revenue. Different denominator. All conservative.",
+      "tableHeaders": [
+        "MARKET DEFINITION",
+        "MARKET SIZE 2030 ($B)",
+        "BIRAGAS 2030 ($M)",
+        "SHARE %",
+        "SOURCE"
+      ],
+      "tableRows": [
+        [
+          "Broad pharma external R&D AI envelope",
+          50,
+          290.8,
+          "0.58%",
+          "McKinsey \u00b7 Deloitte \u00b7 BCG"
+        ],
+        [
+          "Narrow AI-DD platform tools",
+          13.5,
+          290.8,
+          "2.15%",
+          "Grand View \u00b7 Markets & Markets"
+        ],
+        [
+          "Target ID & Validation sub-segment",
+          11,
+          91,
+          "0.83%",
+          "Markets & Markets"
+        ],
+        [
+          "Lead Discovery + Generative Chemistry",
+          5.5,
+          45,
+          "0.82%",
+          "Fortune Business Insights"
+        ],
+        [
+          "Real-World Evidence",
+          8,
+          30,
+          "0.38%",
+          "EvaluatePharma \u00b7 GlobalData"
+        ],
+        [
+          "Companion Diagnostics (Stream V proxy)",
+          18,
+          18.6,
+          "0.10%",
+          "Fortune Business Insights"
+        ],
+        [
+          "Top-20 pharma AI/R&D spend total",
+          10,
+          54,
+          "0.54%",
+          "Bottom-up from 10-K disclosures"
+        ],
+        [
+          "BiRAGAS does not need to dominate any market. It needs to be the substrate underneath all of them \u2014 and own <3% share of any single definition by 2030.",
+          "",
+          "",
+          "",
+          ""
+        ]
+      ],
+      "note": ""
+    },
+    {
+      "id": "11_conversion_targets",
+      "sheetName": "11_Conversion_Targets",
+      "label": "Conversion Targets",
+      "subtitle": "Named accounts \u00b7 timeline \u00b7 ARR",
+      "color": "#22C55E",
+      "headline": "Named Conversion Targets \u00b7 Year 1 + Year 2",
+      "body": "First 20 accounts to close \u00b7 Q-by-Q sequence \u00b7 expected ARR",
+      "tableHeaders": [
+        "TARGET",
+        "COHORT",
+        "FIRST CONTACT (Q)",
+        "EXPECTED CLOSE",
+        "Y1 ARR",
+        "5-Y ARR",
+        "CONVERSION HOOK"
+      ],
+      "tableRows": [
+        [
+          "Pfizer",
+          "Big Pharma",
+          "Q1 2026",
+          "Q3 2026",
+          "$1.80M",
+          "$9.0M",
+          "R&D Innovation team \u00b7 post-Seagen ADC pivot"
+        ],
+        [
+          "Roche/Genentech",
+          "Big Pharma",
+          "Q2 2026",
+          "Q4 2026",
+          "$1.80M",
+          "$9.0M",
+          "Genentech Comp Bio + Foundation Medicine"
+        ],
+        [
+          "Novartis",
+          "Big Pharma",
+          "Q1 2026",
+          "Q3 2026",
+          "$1.80M",
+          "$9.0M",
+          "NIBR Computational Sciences + Data42"
+        ],
+        [
+          "AstraZeneca",
+          "Big Pharma",
+          "Q2 2026",
+          "Q4 2026",
+          "$1.80M",
+          "$9.0M",
+          "Centre for Genomics Research"
+        ],
+        [
+          "Eli Lilly",
+          "Big Pharma",
+          "Q1 2026",
+          "Q3 2026",
+          "$1.80M",
+          "$9.0M",
+          "Lilly Research Labs via Verge intro"
+        ],
+        [
+          "Bristol-Myers Squibb",
+          "Big Pharma",
+          "Q3 2026",
+          "Q1 2027",
+          "$1.80M",
+          "$9.0M",
+          "Translational Medicine Bioinformatics"
+        ],
+        [
+          "Sanofi",
+          "Big Pharma",
+          "Q2 2026",
+          "Q4 2026",
+          "$1.80M",
+          "$9.0M",
+          "Sanofi AI Centre Toronto"
+        ],
+        [
+          "GSK",
+          "Big Pharma",
+          "Q1 2026",
+          "Q3 2026",
+          "$1.80M",
+          "$9.0M",
+          "Open Targets consortium"
+        ],
+        [
+          "Alnylam",
+          "Mid-cap",
+          "Q1 2026",
+          "Q3 2026",
+          "$0.70M",
+          "$3.5M",
+          "siRNA cardiovascular pilot"
+        ],
+        [
+          "Vertex",
+          "Mid-cap",
+          "Q2 2026",
+          "Q4 2026",
+          "$0.70M",
+          "$3.5M",
+          "Diversification programs (T1D, CF, kidney)"
+        ],
+        [
+          "BioMarin",
+          "Mid-cap",
+          "Q3 2026",
+          "Q1 2027",
+          "$0.70M",
+          "$3.5M",
+          "Rare-disease causal modeling"
+        ],
+        [
+          "Incyte",
+          "Mid-cap",
+          "Q4 2026",
+          "Q2 2027",
+          "$0.70M",
+          "$3.5M",
+          "Jakafi successor pipeline"
+        ],
+        [
+          "Recursion",
+          "Mid-cap",
+          "Q1 2026",
+          "Q4 2026",
+          "$0.70M",
+          "$3.5M",
+          "Partnership: BiRAGAS as causal layer under Recursion"
+        ],
+        [
+          "Tempus Labs",
+          "Mid-cap",
+          "Q2 2026",
+          "Q4 2026",
+          "$0.70M",
+          "$3.5M",
+          "xT panel integration"
+        ],
+        [
+          "Guardant Health",
+          "Mid-cap",
+          "Q3 2026",
+          "Q1 2027",
+          "$0.70M",
+          "$3.5M",
+          "Guardant360 biomarker co-dev"
+        ],
+        [
+          "IQVIA",
+          "CRO",
+          "Q1 2026",
+          "Q4 2026",
+          "$1.00M",
+          "$5.0M",
+          "Audit-grade dossier standard offering"
+        ],
+        [
+          "Labcorp Drug Development",
+          "CRO",
+          "Q2 2026",
+          "Q1 2027",
+          "$1.00M",
+          "$5.0M",
+          "LDT distribution co-marketing"
+        ],
+        [
+          "Massachusetts General Hospital",
+          "AMC",
+          "Q1 2026",
+          "Q3 2026",
+          "$0.15M",
+          "$0.75M",
+          "Publication flywheel"
+        ],
+        [
+          "MD Anderson Cancer Center",
+          "AMC",
+          "Q1 2026",
+          "Q3 2026",
+          "$0.15M",
+          "$0.75M",
+          "AML cohort access"
+        ],
+        [
+          "NIH (NHGRI)",
+          "Gov",
+          "Q2 2026",
+          "Q1 2027",
+          "$0.25M",
+          "$1.25M",
+          "ARPA-H + NHGRI infrastructure procurement"
+        ],
+        [
+          "20-ACCOUNT YEAR-1 ARR TOTAL",
+          "",
+          "",
+          "",
+          "$20.30M",
+          "$101.5M",
+          ""
+        ]
+      ],
+      "note": ""
+    },
+    {
+      "id": "12_comparable_ai_companies",
+      "sheetName": "12_Comparable_AI_Companies",
+      "label": "Comparable AI Co.",
+      "subtitle": "Recursion \u00b7 Schr\u00f6dinger \u00b7 AbCellera \u00b7\u2026",
+      "color": "#F97316",
+      "headline": "Comparable AI-Pharma Companies \u2014 Public Disclosures",
+      "body": "Revenue, partnerships, valuation, and competitive position",
+      "tableHeaders": [
+        "COMPANY",
+        "TYPE",
+        "2024 REV ($M)",
+        "MARKET CAP ($B)",
+        "KEY PARTNERSHIPS",
+        "POSITION VS BIRAGAS"
+      ],
+      "tableRows": [
+        [
+          "Recursion Pharmaceuticals",
+          "Image-omics correlation",
+          "100",
+          "1.5",
+          "Roche ($12B), Bayer \u00b7 NVIDIA",
+          "Application \u00b7 no causal layer \u00b7 partnership target"
+        ],
+        [
+          "Schr\u00f6dinger Inc.",
+          "Molecular dynamics",
+          "200",
+          "1.5",
+          "BMS ($2.7B), Lilly \u00b7 Vertex",
+          "Application \u00b7 structure-only \u00b7 channel partner potential"
+        ],
+        [
+          "AbCellera Biologics",
+          "Antibody discovery",
+          "40",
+          "1.0",
+          "Multiple Big Pharma",
+          "Adjacent \u00b7 antibody-specific \u00b7 benchmark for mid-cap ASP"
+        ],
+        [
+          "BenevolentAI",
+          "Knowledge-graph LLM",
+          "10",
+          "0.2",
+          "AstraZeneca \u00b7 Pfizer \u00b7 Merck KGaA",
+          "Application \u00b7 LLM-based \u00b7 BiRAGAS as causal substrate underneath"
+        ],
+        [
+          "Tempus AI",
+          "Clinical-omics aggregator",
+          "700",
+          "8.0",
+          "GSK \u00b7 AstraZeneca",
+          "Adjacent \u00b7 data aggregation \u00b7 CDx partnership target"
+        ],
+        [
+          "Exscientia",
+          "Generative chemistry AI",
+          "20",
+          "0.5",
+          "BMS \u00b7 Sanofi \u00b7 Bayer",
+          "Application \u00b7 chemistry-focused \u00b7 acquisition/consolidation target"
+        ],
+        [
+          "Insilico Medicine (private)",
+          "Generative chemistry AI",
+          "\u2014",
+          "\u2014",
+          "Sanofi ($1.2B) \u00b7 Fosun",
+          "Application \u00b7 BiRAGAS as substrate for hits validation"
+        ],
+        [
+          "Owkin (private)",
+          "Federated learning",
+          "\u2014",
+          "\u2014",
+          "Sanofi \u00b7 Bristol-Myers \u00b7 MSD",
+          "Adjacent \u00b7 federated data \u00b7 biomarker co-dev partner"
+        ],
+        [
+          "Insitro",
+          "Generative phenotype",
+          "\u2014",
+          "\u2014",
+          "Gilead \u00b7 BMS \u00b7 GSK",
+          "Application \u00b7 phenotype models \u00b7 BiRAGAS as causal layer"
+        ],
+        [
+          "Atomwise (private)",
+          "Virtual screening",
+          "\u2014",
+          "\u2014",
+          "Sanofi \u00b7 Lilly \u00b7 Bayer \u00b7 Pfizer",
+          "Application \u00b7 structure docking \u00b7 BiRAGAS for target validation"
+        ],
+        [
+          "Verge Genomics",
+          "Neuro-focused AI-DD",
+          "\u2014",
+          "\u2014",
+          "Eli Lilly ($694M)",
+          "Adjacent \u00b7 ALS biomarker \u00b7 BiRAGAS for downstream validation"
+        ],
+        [
+          "Iktos",
+          "Generative chemistry",
+          "\u2014",
+          "\u2014",
+          "Merck \u00b7 Janssen \u00b7 Servier",
+          "Application \u00b7 small-molecule design \u00b7 partnership potential"
+        ],
+        [
+          "BiRAGAS \u00b7 Ayass Bioscience",
+          "Causal infrastructure (OS)",
+          "\u2014",
+          "\u2014",
+          "Pre-Series-A \u00b7 20 named conversion targets",
+          "INFRASTRUCTURE \u00b7 the substrate underneath all above"
+        ]
+      ],
+      "note": ""
+    },
+    {
+      "id": "13_sources_references",
+      "sheetName": "13_Sources_References",
+      "label": "Sources",
+      "subtitle": "53-source bibliography",
+      "color": "#0EA5E9",
+      "headline": "Sources & References",
+      "body": "53-source bibliography for the BiRAGAS Financial Projections model + this workbook",
+      "tableHeaders": [
+        "#",
+        "CATEGORY",
+        "REFERENCE",
+        "PUBLICATION YEAR",
+        "VERIFICATION STATUS"
+      ],
+      "tableRows": [
+        [
+          1,
+          "Market sizing",
+          "Grand View Research \u2014 AI in Drug Discovery (GVR-4-68039-944-1)",
+          "2024",
+          "Publisher catalog verified"
+        ],
+        [
+          2,
+          "Market sizing",
+          "Markets & Markets \u2014 AI in Drug Discovery Global Forecast (BT-7728)",
+          "2029",
+          "Report ID verified"
+        ],
+        [
+          3,
+          "Market sizing",
+          "Precedence Research \u2014 AI in Drug Discovery Market",
+          "2024",
+          "Catalog verified"
+        ],
+        [
+          4,
+          "Pharma R&D AI",
+          "McKinsey & Company \u2014 Future of AI in Pharma 2024",
+          "2024",
+          "Public report"
+        ],
+        [
+          5,
+          "Pharma R&D AI",
+          "Deloitte \u2014 Pharma R&D Spend Trends 2024",
+          "2024",
+          "Public report"
+        ],
+        [
+          6,
+          "Pharma R&D AI",
+          "Boston Consulting Group \u2014 Bio-AI Outlook",
+          "2024",
+          "Public report"
+        ],
+        [
+          7,
+          "RNA-Seq",
+          "Markets & Markets \u2014 RNA-Seq Market",
+          "2024",
+          "Catalog verified"
+        ],
+        [
+          8,
+          "RNA-Seq",
+          "Allied Market Research \u2014 RNA-Seq",
+          "2024",
+          "Catalog verified"
+        ],
+        [
+          9,
+          "RNA Therapeutics",
+          "Vantage Market Research \u2014 RNA Therapeutics",
+          "2024",
+          "Catalog verified"
+        ],
+        [
+          10,
+          "RNA Therapeutics",
+          "Statista \u2014 RNA Therapeutics Outlook",
+          "2024",
+          "Statista verified"
+        ],
+        [
+          11,
+          "RNA Therapeutics",
+          "Nature Reviews Drug Discovery \u2014 therapeutic mRNA review",
+          "2023",
+          "DOI verified"
+        ],
+        [
+          13,
+          "CDx",
+          "Fortune Business Insights \u2014 Companion Diagnostics (102320)",
+          "2024",
+          "Report ID verified"
+        ],
+        [
+          14,
+          "CDx",
+          "Markets & Markets \u2014 Companion Diagnostics",
+          "2024",
+          "Catalog verified"
+        ],
+        [
+          15,
+          "Oncology",
+          "IQVIA \u2014 Oncology Market Outlook",
+          "2024",
+          "IQVIA subscriber"
+        ],
+        [
+          16,
+          "Oncology",
+          "GlobalData \u2014 Oncology",
+          "2024",
+          "GlobalData subscriber"
+        ],
+        [
+          33,
+          "Phase II failure",
+          "Wong, Siah & Lo \u2014 Biostatistics 2019",
+          "2019",
+          "DOI verified"
+        ],
+        [
+          43,
+          "AMR",
+          "CDC AMR Threats Report",
+          "2023",
+          "CDC.gov verified"
+        ],
+        [
+          45,
+          "Wound care",
+          "Sen, Hu et al. \u2014 Chronic Wound Prevalence",
+          "2023",
+          "Published"
+        ],
+        [
+          46,
+          "Wellness",
+          "Global Wellness Institute \u2014 Wellness Monitor",
+          "2024",
+          "Public report"
+        ],
+        [
+          47,
+          "Longevity",
+          "Bank of America Research \u2014 Longevity Report",
+          "2024",
+          "BoA Research"
+        ],
+        [
+          48,
+          "AI",
+          "Gartner \u2014 Agentic AI Outlook",
+          "2024",
+          "Gartner subscriber"
+        ],
+        [
+          51,
+          "Public 10-Ks",
+          "SEC EDGAR \u2014 Recursion, Schr\u00f6dinger, AbCellera, BenevolentAI, Tempus 10-Ks/S-1",
+          "2023",
+          "SEC EDGAR public"
+        ],
+        [
+          52,
+          "FDA",
+          "FDA Biomarker Qualification Program + 21 CFR \u00a7809.40 CDRH guidance",
+          "2014\u20132023",
+          "FDA.gov verified"
+        ],
+        [
+          53,
+          "Internal",
+          "BiRAGAS Utilization Workbook \u2014 Strategic Planning / BiRAGAS_Utilization/",
+          "2026",
+          "Internal \u00b7 NDA"
+        ]
+      ],
+      "note": ""
+    }
+  ]
+}</script>
+<script>
+(function() {
+  const el = document.getElementById("playbook-data");
+  if (el) { try { window.__PLAYBOOK_DATA__ = JSON.parse(el.textContent); } catch(e) { console.error(e); } }
+})();
+</script>
+</body>
+</html>
