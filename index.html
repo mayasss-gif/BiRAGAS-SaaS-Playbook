@@ -289,8 +289,10 @@ function renderChart(chart) {
 function App() {
   const [idx, setIdx] = useState(0);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [audioOn, setAudioOn] = useState(false);
   const touchRef = useRef(null);
   const mainRef = useRef(null);
+  const audioRef = useRef(null);
 
   const cur = sections[idx];
   const accent = cur.color;
@@ -298,6 +300,18 @@ function App() {
   useEffect(() => { document.body.style.overflow = drawerOpen ? "hidden" : ""; return () => { document.body.style.overflow = ""; }; }, [drawerOpen]);
   useEffect(() => { const b = document.getElementById("boot"); if (b) b.style.display = "none"; }, []);
   useEffect(() => { if (mainRef.current) mainRef.current.scrollTop = 0; }, [idx]);
+
+  // Audio sync — autoplay current section when ON
+  useEffect(() => {
+    const a = audioRef.current;
+    if (!a) return;
+    a.pause();
+    if (!audioOn) return;
+    a.src = `audio/${cur.id}.mp3`;
+    a.load();
+    const p = a.play();
+    if (p) p.catch(() => {});
+  }, [idx, audioOn]);
 
   // Keyboard
   useEffect(() => {
@@ -344,7 +358,28 @@ function App() {
             <h1>{DATA.title}</h1>
             <div className="t">{DATA.subtitle}</div>
           </div>
-          <div className="hd-controls">
+          <div className="hd-controls" style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <button
+              onClick={() => setAudioOn(v => !v)}
+              aria-label={audioOn ? "Mute narration" : "Play narration"}
+              style={{
+                background: audioOn ? accent : "transparent",
+                color: audioOn ? "#0A0A0A" : "#C8C4BC",
+                border: `1px solid ${audioOn ? accent : "#333"}`,
+                padding: "8px 12px",
+                fontFamily: "monospace",
+                fontSize: 11,
+                fontWeight: 700,
+                letterSpacing: "0.06em",
+                cursor: "pointer",
+                borderRadius: 4,
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+              }}>
+              <span style={{ fontSize: 13 }}>{audioOn ? "🔊" : "🔇"}</span>
+              <span>{audioOn ? "ON" : "OFF"}</span>
+            </button>
             <span className="chip">{String(idx + 1).padStart(2, "0")} / {String(sections.length).padStart(2, "0")}</span>
           </div>
         </div>
@@ -448,6 +483,9 @@ function App() {
         </div>
       </div>
 
+      {/* AUDIO */}
+      <audio ref={audioRef} preload="auto" />
+
       {/* PILL NAV */}
       <div className="pill-nav">
         <button onClick={() => setIdx(i => Math.max(0, i - 1))} disabled={idx === 0}>← Prev</button>
@@ -546,7 +584,8 @@ ReactDOM.createRoot(document.getElementById("root")).render(<App />);
           "v": "comprehensive sheets in this book"
         }
       ],
-      "chart": null
+      "chart": null,
+      "narration": "Welcome to the BiRAGAS SaaS Stream Playbook. Stream One is the operating system license itself \u2014 the foundation of the BiRAGAS business model and forty-seven percent of 2030 base revenue at two hundred ninety point eight million dollars. Across thirteen sheets, this workbook walks you through the market sizing, the named target accounts, the pricing benchmarks, the five-year P&L, and the comparable companies that validate the model. Five hundred sixty-two customers across six cohorts by 2030. Every number is sourced. Use the menu icon at top left to jump between sheets."
     },
     {
       "id": "02_tam_sam_som",
@@ -750,7 +789,8 @@ ReactDOM.createRoot(document.getElementById("root")).render(<App />);
           }
         ],
         "unit": "B"
-      }
+      },
+      "narration": "Market sizing waterfall, from broad to obtainable. The broad pharma external R&D AI envelope reaches fifty billion dollars by 2030 \u2014 McKinsey, Deloitte, BCG. Narrow that to AI drug-discovery platform tools and you're at thirteen and a half billion. The serviceable addressable market \u2014 pieces BiRAGAS can actually license \u2014 is nine and a half billion. BiRAGAS 2030 SOM, the obtainable share, is two hundred ninety point eight million. That's two point one five percent of the narrow market and zero point five eight percent of the broad envelope. Deliberately conservative \u2014 the numbers are floors, not ceilings."
     },
     {
       "id": "03_bigpharma_ai_programs",
@@ -982,7 +1022,8 @@ ReactDOM.createRoot(document.getElementById("root")).render(<App />);
           ""
         ]
       ],
-      "note": ""
+      "note": "",
+      "narration": "Top twenty Big Pharma \u2014 every one has an internal AI program and a stack of external partnerships. Pfizer's Concerto, Roche's Prescient, Novartis's Data forty-two, AstraZeneca's Centre for Genomics Research, Lilly's OIDD, Merck's MSD Comp Biology \u2014 these aren't pilots, they are budgeted line items. BiRAGAS doesn't replace them. BiRAGAS becomes the causal substrate underneath them. Thirty Big Pharma customers by 2030 \u2014 that's sixty percent of the top fifty pharma R&D budgets. Conservative penetration, defended by named entry vectors per account."
     },
     {
       "id": "04_midcap_biotech",
@@ -1211,7 +1252,8 @@ ReactDOM.createRoot(document.getElementById("root")).render(<App />);
           "Causal target ID partnership"
         ]
       ],
-      "note": ""
+      "note": "",
+      "narration": "Thirty named mid-cap biotechs with AI or computational initiatives \u2014 Vertex, Regeneron, BioMarin, Moderna, Alnylam, Ionis, Incyte, Seagen and twenty-two others. Annual contract value of seven hundred thousand dollars \u2014 within AbCellera's disclosed mid-tier range. One hundred thirty mid-cap customers by 2030 \u2014 five point two percent of the global mid-cap pool. These are companies with twenty to fifty million dollars in computational spend, no causal-inference layer, and a need for FDA-quality evidence. BiRAGAS is the gap."
     },
     {
       "id": "05_cros_amcs_gov",
@@ -1403,7 +1445,8 @@ ReactDOM.createRoot(document.getElementById("root")).render(<App />);
           ""
         ]
       ],
-      "note": ""
+      "note": "",
+      "narration": "Three channel categories: CROs, academic medical centers, and government. CROs \u2014 IQVIA, Parexel, ICON, Syneos, Labcorp, Charles River \u2014 embed BiRAGAS into client deliverables. Thirty-two CROs by 2030, one million dollar contracts, channel-leveraged distribution. Academic medical centers \u2014 Dana-Farber, MD Anderson, Mayo, Cleveland Clinic, Memorial Sloan Kettering and seventy-five more \u2014 at one hundred fifty thousand per institution. Government \u2014 NIH, NCI, BARDA, AMRC, FDA-CDER, DoD \u2014 at two hundred fifty thousand. Public-sector credibility plus annuity revenue."
     },
     {
       "id": "06_customer_ramp",
@@ -1589,7 +1632,8 @@ ReactDOM.createRoot(document.getElementById("root")).render(<App />);
             ]
           }
         ]
-      }
+      },
+      "narration": "Customer ramp across six cohorts. 2026 starts at fifty paying customers and twenty-seven million in revenue. By 2028, two hundred seventy-six customers and one hundred fifty-two million \u2014 that's the inflection. By 2030, five hundred sixty-two customers and two hundred ninety point eight million. Eleven-point-two times customer growth over five years. Big Pharma grows ten times, mid-cap thirteen times, small biotech almost thirteen times. These are not curves drawn to a target \u2014 they are bottom-up builds from named accounts and channel partner programs."
     },
     {
       "id": "07_asp_benchmarks",
@@ -1713,7 +1757,8 @@ ReactDOM.createRoot(document.getElementById("root")).render(<App />);
             ]
           }
         ]
-      }
+      },
+      "narration": "Pricing is benchmarked, not invented. Big Pharma at one point eight million \u2014 eighteen percent below Schr\u00f6dinger's two point two zero million ten-K disclosure. Mid-cap at seven hundred thousand \u2014 midpoint of AbCellera's published range. CROs at one million \u2014 discounted seventeen percent from Recursion's disclosure to support channel ramp. Small biotech, academic medical centers, government \u2014 all priced inside published peer ranges. Every ASP can be defended against a public 10-K filing. No magic numbers."
     },
     {
       "id": "08_5y_pnl_stream_i",
@@ -2030,7 +2075,8 @@ ReactDOM.createRoot(document.getElementById("root")).render(<App />);
             ]
           }
         ]
-      }
+      },
+      "narration": "Five-year P&L, cohort by cohort. 2026 \u2014 twenty-two million revenue, four million COGS, eighteen million gross profit, eighty-two percent gross margin. 2028 inflection \u2014 one hundred forty-three point nine million revenue with expansion uplift, twenty-five point nine million COGS, one hundred eighteen million gross profit. 2030 \u2014 two hundred ninety point eight million revenue, fifty-two million COGS, two hundred thirty-eight million gross profit. Net revenue retention compounds from one hundred eighteen percent in 2027 to one hundred thirty-two percent in 2030 \u2014 that's the expansion engine."
     },
     {
       "id": "09_penetration_math",
@@ -2190,7 +2236,8 @@ ReactDOM.createRoot(document.getElementById("root")).render(<App />);
             ]
           }
         ]
-      }
+      },
+      "narration": "Penetration math with bear, base, and bull cases. Base case 2030 is sixty percent of the top fifty Big Pharma, five point two percent of mid-cap biotech, twenty-seven percent of top fifty CROs, twenty percent of US academic medical centers, thirty percent of government agencies. Bear case multiplies penetration by half \u2014 yielding one hundred forty-eight million revenue and seventy-three million EBITDA at seventy-eight percent margin. Bull case multiplies by one point six \u2014 four hundred sixty-seven million revenue and two hundred eighty-five million EBITDA at eighty-five percent. Even bear case is investable."
     },
     {
       "id": "10_market_share",
@@ -2325,7 +2372,8 @@ ReactDOM.createRoot(document.getElementById("root")).render(<App />);
           }
         ],
         "unit": "%"
-      }
+      },
+      "narration": "Same revenue. Different denominators. BiRAGAS at two hundred ninety point eight million is zero point five eight percent of the broad fifty billion AI R&D envelope, two point one five percent of the thirteen and a half billion narrow market, zero point eight three percent of the target ID sub-segment. Under three percent of any single market definition. BiRAGAS does not need to dominate any market. It needs to be the substrate underneath all of them."
     },
     {
       "id": "11_conversion_targets",
@@ -2535,7 +2583,8 @@ ReactDOM.createRoot(document.getElementById("root")).render(<App />);
           ""
         ]
       ],
-      "note": ""
+      "note": "",
+      "narration": "Twenty named conversion targets with timelines and expected annual recurring revenue. Roche Genentech, Pfizer R&D Innovation, AstraZeneca Centre for Genomics Research, Eli Lilly via Verge Genomics, Novartis Data forty-two, MD Anderson, Dana-Farber, Memorial Sloan Kettering \u2014 every account has a named entry vector, a stakeholder, and a quarter-by-quarter conversion plan. First eight closes in 2026 represent twelve point seven million in committed pipeline. This is a pipeline, not a wishlist."
     },
     {
       "id": "12_comparable_ai_companies",
@@ -2714,7 +2763,8 @@ ReactDOM.createRoot(document.getElementById("root")).render(<App />);
           }
         ],
         "unit": "M"
-      }
+      },
+      "narration": "Comparable AI-pharma companies and where BiRAGAS sits. Tempus at seven hundred million revenue. Schr\u00f6dinger at two hundred million. Recursion at one hundred million with a twelve billion dollar Roche deal. AbCellera at forty million. BenevolentAI, Exscientia, Insilico, Owkin, Insitro, Atomwise, Verge, Iktos. Every one of them is an application. BiRAGAS is the infrastructure underneath. The pitch is simple \u2014 we don't compete with these companies, we power them."
     },
     {
       "id": "13_sources_references",
@@ -2901,7 +2951,8 @@ ReactDOM.createRoot(document.getElementById("root")).render(<App />);
           "Internal \u00b7 NDA"
         ]
       ],
-      "note": ""
+      "note": "",
+      "narration": "Fifty-three sources, every number cited. Public 10-K filings \u2014 Schr\u00f6dinger, Recursion, AbCellera, Tempus. Market research \u2014 McKinsey, Deloitte, BCG, Grand View, Markets and Markets, Fortune Business Insights, Precedence. FDA frameworks \u2014 the Biomarker Qualification Program, twenty-one CFR eight oh nine point forty, Breakthrough Device. Industry trade press, peer-reviewed publications, R&D spend disclosures from top-twenty pharma annual reports. If a number appears in this workbook, you can audit it. Welcome to BiRAGAS."
     }
   ]
 }</script>
